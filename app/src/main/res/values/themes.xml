@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.KimiCodePocket" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="Theme.KimiCode" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorPrimary">@color/accent</item>
         <item name="colorPrimaryVariant">@color/accent_dark</item>
         <item name="colorOnPrimary">@color/surface</item>

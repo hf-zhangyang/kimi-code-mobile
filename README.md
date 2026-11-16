@@ -1,4 +1,4 @@
-# Kimi Code 随身端（Android）
+# KimiCode（Android）
 
 一个用于保存 Kimi Code Desktop 远程控制配对的 Android 客户端。首次扫描二维码或粘贴 HTTPS 配对链接，之后从手机桌面图标直接进入控制页，不再依赖浏览器标签页。
 

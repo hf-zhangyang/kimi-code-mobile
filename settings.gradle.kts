@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "KimiCodePocket"
+rootProject.name = "KimiCode"
 include(":app")

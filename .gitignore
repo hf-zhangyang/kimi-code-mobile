@@ -15,3 +15,7 @@ signing/*.jks
 .idea/
 *.iml
 .DS_Store
+
+# 工具脚手架与调试产物
+.spec-workflow/
+.screenshots/

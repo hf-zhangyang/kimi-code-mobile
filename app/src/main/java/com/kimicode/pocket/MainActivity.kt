@@ -15,6 +15,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.view.WindowManager
 import android.webkit.CookieManager
 import android.webkit.SslErrorHandler
 import android.webkit.ValueCallback
@@ -36,6 +37,8 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import com.kimicode.pocket.databinding.ActivityPairingBinding
@@ -241,7 +244,6 @@ class MainActivity : AppCompatActivity() {
         remoteBinding = binding
         setContentView(binding.root)
 
-        binding.reloadButton.setOnClickListener { reloadRemote() }
         binding.retryButton.setOnClickListener { reloadRemote() }
         binding.menuButton.setOnClickListener { showConnectionMenu() }
 
@@ -287,8 +289,7 @@ class MainActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView, url: String) {
                 binding.loadingProgress.visibility = View.GONE
                 if (connectionFailed) return
-                val host = PairingValidator.displayHost(url) ?: "桌面端"
-                binding.connectionStatus.text = "页面已载入 · $host"
+                binding.connectionStatus.text = "页面已载入"
             }
 
             override fun onReceivedError(
@@ -369,6 +370,7 @@ class MainActivity : AppCompatActivity() {
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
+            setBackgroundColor(android.graphics.Color.WHITE)
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -419,7 +421,14 @@ class MainActivity : AppCompatActivity() {
             javaScriptCanOpenWindowsAutomatically = false
             setSupportMultipleWindows(false)
             mediaPlaybackRequiresUserGesture = true
+            // 登录页依赖移动端 viewport；不开启时会按桌面宽度排版后被挤进手机屏幕。
+            useWideViewPort = true
+            loadWithOverviewMode = true
+            setSupportZoom(true)
+            builtInZoomControls = false
+            displayZoomControls = false
         }
+        childWebView.setBackgroundColor(android.graphics.Color.WHITE)
         CookieManager.getInstance().setAcceptThirdPartyCookies(childWebView, true)
         childWebView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(
@@ -464,14 +473,33 @@ class MainActivity : AppCompatActivity() {
         loginDialog = dialog
         loginWebView = childWebView
 
-        val transport = resultMsg.obj as WebView.WebViewTransport
-        transport.webView = childWebView
-        resultMsg.sendToTarget()
         dialog.show()
-        dialog.window?.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
+        dialog.window?.apply {
+            setLayout(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+            statusBarColor = android.graphics.Color.WHITE
+            navigationBarColor = android.graphics.Color.WHITE
+            decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+        }
+
+        // 弹窗是全屏的，标题栏与「完成并返回」会压到状态栏图标下面，这里按系统栏高度让出空间。
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
+
+        // 等弹窗完成布局后再让页面开始加载，避免登录页按 0×0 尺寸排版。
+        childWebView.post {
+            if (loginWebView !== childWebView || !dialog.isShowing) return@post
+            val transport = resultMsg.obj as WebView.WebViewTransport
+            transport.webView = childWebView
+            resultMsg.sendToTarget()
+        }
     }
 
     private fun checkLoginCompletion(view: WebView) {
@@ -551,12 +579,14 @@ class MainActivity : AppCompatActivity() {
     private fun showConnectionMenu() {
         val anchor = remoteBinding?.menuButton ?: return
         val popup = PopupMenu(this, anchor)
-        popup.menu.add(0, ACTION_RESCAN, 0, "扫描新二维码")
-        popup.menu.add(0, ACTION_GALLERY, 1, "从相册识别二维码")
-        popup.menu.add(0, ACTION_HOST, 2, "查看连接地址")
-        popup.menu.add(0, ACTION_UNPAIR, 3, "解除配对")
+        popup.menu.add(0, ACTION_RELOAD, 0, "重新加载")
+        popup.menu.add(0, ACTION_RESCAN, 1, "扫描新二维码")
+        popup.menu.add(0, ACTION_GALLERY, 2, "从相册识别二维码")
+        popup.menu.add(0, ACTION_HOST, 3, "查看连接地址")
+        popup.menu.add(0, ACTION_UNPAIR, 4, "解除配对")
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
+                ACTION_RELOAD -> reloadRemote()
                 ACTION_RESCAN -> startScan()
                 ACTION_GALLERY -> startGalleryScan()
                 ACTION_HOST -> showHostInfo()
@@ -611,5 +641,6 @@ class MainActivity : AppCompatActivity() {
         const val ACTION_HOST = 2
         const val ACTION_UNPAIR = 3
         const val ACTION_GALLERY = 4
+        const val ACTION_RELOAD = 5
     }
 }
