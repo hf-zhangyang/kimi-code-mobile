@@ -1,0 +1,17 @@
+# Gradle 构建产物
+.gradle/
+build/
+.kotlin/
+captures/
+
+# 本地环境配置
+local.properties
+
+# 签名密钥只保留在本机，绝不入库
+signing/keystore.properties
+signing/*.jks
+
+# IDE / 系统文件
+.idea/
+*.iml
+.DS_Store
