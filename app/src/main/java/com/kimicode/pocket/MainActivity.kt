@@ -23,13 +23,11 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
-import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -245,7 +243,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.retryButton.setOnClickListener { reloadRemote() }
-        binding.menuButton.setOnClickListener { showConnectionMenu() }
 
         val webView = binding.remoteWebView
         webView.settings.apply {
@@ -283,13 +280,11 @@ class MainActivity : AppCompatActivity() {
                 connectionFailed = false
                 binding.errorView.visibility = View.GONE
                 binding.loadingProgress.visibility = View.VISIBLE
-                binding.connectionStatus.text = "正在连接桌面端…"
             }
 
             override fun onPageFinished(view: WebView, url: String) {
                 binding.loadingProgress.visibility = View.GONE
                 if (connectionFailed) return
-                binding.connectionStatus.text = "页面已载入"
             }
 
             override fun onReceivedError(
@@ -318,7 +313,7 @@ class MainActivity : AppCompatActivity() {
                 error: SslError
             ) {
                 handler.cancel()
-                showConnectionError("安全证书校验失败，已停止连接。请通过右上角菜单重新扫描官方配对链接。")
+                showConnectionError("安全证书校验失败，已停止连接。请确认配对链接来自官方桌面端。")
             }
         }
 
@@ -521,7 +516,6 @@ class MainActivity : AppCompatActivity() {
         connectionFailed = false
         binding.errorView.visibility = View.GONE
         binding.loadingProgress.visibility = View.VISIBLE
-        binding.connectionStatus.text = "正在返回远程控制…"
         binding.remoteWebView.clearHistory()
         binding.remoteWebView.loadUrl(url)
     }
@@ -559,7 +553,6 @@ class MainActivity : AppCompatActivity() {
         connectionFailed = false
         binding.errorView.visibility = View.GONE
         binding.loadingProgress.visibility = View.VISIBLE
-        binding.connectionStatus.text = "正在重新连接…"
         if (binding.remoteWebView.url.isNullOrBlank()) {
             binding.remoteWebView.loadUrl(url)
         } else {
@@ -571,53 +564,8 @@ class MainActivity : AppCompatActivity() {
         val binding = remoteBinding ?: return
         connectionFailed = true
         binding.loadingProgress.visibility = View.GONE
-        binding.connectionStatus.text = "连接失败"
         binding.errorMessage.text = message
         binding.errorView.visibility = View.VISIBLE
-    }
-
-    private fun showConnectionMenu() {
-        val anchor = remoteBinding?.menuButton ?: return
-        val popup = PopupMenu(this, anchor)
-        popup.menu.add(0, ACTION_RELOAD, 0, "重新加载")
-        popup.menu.add(0, ACTION_RESCAN, 1, "扫描新二维码")
-        popup.menu.add(0, ACTION_GALLERY, 2, "从相册识别二维码")
-        popup.menu.add(0, ACTION_HOST, 3, "查看连接地址")
-        popup.menu.add(0, ACTION_UNPAIR, 4, "解除配对")
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                ACTION_RELOAD -> reloadRemote()
-                ACTION_RESCAN -> startScan()
-                ACTION_GALLERY -> startGalleryScan()
-                ACTION_HOST -> showHostInfo()
-                ACTION_UNPAIR -> confirmUnpair()
-            }
-            true
-        }
-        popup.show()
-    }
-
-    private fun showHostInfo() {
-        val host = PairingValidator.displayHost(activeRemoteUrl) ?: "未知"
-        AlertDialog.Builder(this)
-            .setTitle("当前连接地址")
-            .setMessage("$host\n\n完整配对令牌不会在这里显示，也不会进入系统备份。")
-            .setPositiveButton("知道了", null)
-            .show()
-    }
-
-    private fun confirmUnpair() {
-        AlertDialog.Builder(this)
-            .setTitle("解除桌面端配对？")
-            .setMessage("将删除本机保存的配对链接和页面数据。下次连接需要重新扫码。")
-            .setNegativeButton("取消", null)
-            .setPositiveButton("解除配对") { _, _ ->
-                pairingStore.clear()
-                CookieManager.getInstance().removeAllCookies(null)
-                WebStorage.getInstance().deleteAllData()
-                showPairing()
-            }
-            .show()
     }
 
     private fun destroyRemoteView() {
@@ -636,11 +584,4 @@ class MainActivity : AppCompatActivity() {
         remoteBinding = null
     }
 
-    private companion object {
-        const val ACTION_RESCAN = 1
-        const val ACTION_HOST = 2
-        const val ACTION_UNPAIR = 3
-        const val ACTION_GALLERY = 4
-        const val ACTION_RELOAD = 5
-    }
 }
