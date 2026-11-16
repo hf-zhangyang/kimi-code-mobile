@@ -1,41 +1,77 @@
 # KimiCode（Android）
 
-一个用于保存 Kimi Code Desktop 远程控制配对的 Android 客户端。首次扫描二维码或粘贴 HTTPS 配对链接，之后从手机桌面图标直接进入控制页，不再依赖浏览器标签页。
+> 桌面上的代码，装进口袋。
 
-## 安装与使用
+KimiCode 是一个 Android 随身客户端，用于连接 **Kimi Code Desktop 的官方远程控制服务**。在电脑上开启远程控制后，手机扫描一次二维码（或粘贴配对链接），之后从桌面图标直接进入自己的 Kimi Code 工作区——查看会话、继续对话、审批工具调用，不再依赖浏览器标签页。
 
-1. 手机系统需为 Android 8.0 或更高版本；安装包不含原生库，不再限制 CPU 架构。
-2. 将 APK 传到手机，允许本次「安装未知应用」后安装。
-3. 电脑打开 Kimi Code Desktop 1.1.0 或更高版本，进入「设置 → 远程控制」并开启。
-4. 打开手机 App，点击「扫描二维码」，或点击「从相册识别二维码」选择桌面二维码截图，确认连接域名后保存。
-5. 之后直接打开 App 即可。如果桌面端重建了远程链接，请在右上角菜单中选择「扫描新二维码」或「从相册识别二维码」；连接失败时错误页只提供「重新连接」，不再重复显示扫码入口。
+安装包约 5.8 MB，不含原生库，不限制 CPU 架构；最低支持 Android 8.0（API 26）。
 
-## 已实现
+## 功能特性
 
-- 原生摄像头二维码扫描，以及手动粘贴链接。
-- 支持从相册选择二维码截图或照片，在应用内异步解码；使用系统图片选择器，不申请相册或存储权限。
-- 扫码后显示域名确认，不直接加载不明二维码。
-- 配对链接保存在应用私有的加密 SharedPreferences 中（EncryptedSharedPreferences），应用关闭或重启后仍可恢复；旧版本保存的明文配对链接会在首次读取时迁移到加密存储并清除明文副本。
-- 全屏应用内远程控制页，支持页面内返回、刷新和断线重试。
-- 登录流程在应用内窗口完成，不跳外部浏览器；登录成功自动返回，也可点击「完成并返回」。
-- 支持远程页面的文件选择上传。
-- 连接失败时提供「重新连接」；重新扫码、从相册识别二维码、查看连接域名、解除配对并清除页面数据统一在右上角菜单中，错误页不再重复显示扫码入口。
-- 仅允许 HTTPS；拦截 HTTP 和 SSL 证书错误。
-- 禁止系统备份配对信息，关闭 WebView 调试，不申请麦克风、存储、通讯录或定位权限。
+**配对与连接**
 
-## 边界
+- 三种配对方式：摄像头扫描二维码、从相册识别二维码截图、手动粘贴 HTTPS 配对链接。
+- 相册识别使用系统图片选择器，应用内异步解码，不申请相册 / 存储权限。
+- 扫码后先显示连接域名供确认，不直接加载不明二维码。
+- 配对链接保存在应用私有空间的加密存储中（EncryptedSharedPreferences），重启后自动恢复；旧版明文数据首次读取时自动迁移并清除明文副本。
+- 连接失败时提供错误页与「重新连接」按钮。
 
-- 这是第三方配对客户端，不是 Moonshot AI 官方应用。
-- 控制功能由 Kimi Code Desktop 官方远程控制服务提供；电脑端需要保持运行并联网。
-- 卸载 App 会删除本机保存的配对链接，需要重新扫码。
-- 当前安装包使用本地固定测试签名，适合侧载体验，不代表已上架应用商店。1.1.0 起签名密钥保存在项目 signing 目录，供后续版本覆盖升级使用。
+**远程控制页**
+
+- 全屏 WebView，无多余原生顶栏，页面内容即全部界面。
+- 顶部加载进度条；支持页面内返回、远程页面的文件选择上传。
+- Kimi 登录在应用内弹窗完成（手机号 / 企业 SSO），不跳外部浏览器；登录成功自动返回，也可点「完成并返回」；弹窗已适配状态栏，不与系统图标重叠。
+
+**安全与隐私**
+
+- 仅允许 HTTPS；拦截 HTTP 链接，SSL 证书错误直接停止连接。
+- 配对信息禁止进入系统备份；完整配对令牌不在界面显示。
+- 关闭 WebView 调试与文件 / content 访问；不申请麦克风、存储、通讯录、定位权限。
+- 语音输入交给系统输入法，App 内不集成语音模块。
+
+## 使用方式
+
+1. 电脑打开 **Kimi Code Desktop 1.1.0+**，进入「设置 → 远程控制」并开启，保持电脑运行并联网。
+2. 手机安装 APK（侧载，需允许「安装未知应用」）。
+3. 打开 App，选择「扫描二维码」「从相册识别二维码」或「粘贴配对链接」，确认域名后保存。
+4. 之后直接打开 App 即进入工作区；需要登录时在应用内弹窗完成。
+5. 如需更换配对：当前版本没有应用内换配对入口，请清除应用数据或卸载重装后重新扫码。
 
 ## 构建
 
-需要 JDK 17、Android SDK 35 和 Gradle 8.10.2。
+环境要求：JDK 17、Android SDK 35、Gradle 8.13（AGP 8.7.3）。
 
 ```bash
 gradle testDebugUnitTest assembleRelease
 ```
 
-二维码扫描使用 JourneyApps ZXing Android Embedded 4.3.0（Apache License 2.0）。配对链接加密存储使用 AndroidX Security Crypto / Tink，第三方许可见 `THIRD_PARTY_NOTICES.md`。
+- **Windows 中文路径注意**：AGP 会拒绝含非 ASCII 字符的项目路径。可先 `subst K: "项目目录"` 映射出纯 ASCII 盘符，在 `K:\` 下构建，完成后 `subst K: /d` 解除。
+- `local.properties` 需配置 `sdk.dir` 指向本机 Android SDK（该文件不入库）。
+- **签名**：release 默认读取 `signing/keystore.properties` 与其中的 keystore 文件；两者不入库，缺失时回退 debug 签名。本机侧载使用固定自签名密钥，保证覆盖升级签名一致；密钥放置方式见 [signing/README.md](signing/README.md)。
+
+## 项目结构
+
+```
+app/src/main/java/com/kimicode/pocket/
+├── MainActivity.kt        # 配对页 / 远程页 / 登录弹窗 / 扫码与相册识别入口
+├── PairingStore.kt        # 配对链接加密存储与明文迁移
+├── PairingValidator.kt    # 配对链接校验（HTTPS、官方域名）
+├── LoginFlow.kt           # 登录完成页判定
+└── GalleryQrDecoder.kt    # 相册二维码异步解码
+app/src/main/res/layout/   # activity_pairing / activity_remote
+app/src/test/              # LoginFlow、PairingValidator 单元测试
+signing/                   # 签名说明（密钥本身不入库）
+```
+
+## 边界与说明
+
+- 这是第三方配对客户端，**不是 Moonshot AI 官方应用**；控制能力由 Kimi Code Desktop 官方远程控制服务提供。
+- 电脑端需保持运行并联网；桌面端重建远程链接后，旧配对会失效，需按上文方式重新配对。
+- 卸载 App 会删除本机保存的配对链接。
+- 当前使用本地固定测试签名，适合侧载体验，未上架应用商店。
+
+## 第三方组件
+
+- 二维码扫描：JourneyApps ZXing Android Embedded 4.3.0（Apache License 2.0）。
+- 加密存储：AndroidX Security Crypto / Tink。
+- 完整许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
