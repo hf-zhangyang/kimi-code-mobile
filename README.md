@@ -75,3 +75,7 @@ signing/                   # 签名说明（密钥本身不入库）
 - 二维码扫描：JourneyApps ZXing Android Embedded 4.3.0（Apache License 2.0）。
 - 加密存储：AndroidX Security Crypto / Tink。
 - 完整许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+## 许可
+
+本项目自身代码以 [MIT License](LICENSE) 开源，可自由使用、修改与分发。第三方组件保留其原有许可，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
